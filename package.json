@@ -8,9 +8,11 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@google/genai": "^1.30.0",
     "@modelcontextprotocol/sdk": "^1.22.0",
     "dotenv": "^16.4.5",
     "express": "^5.1.0",
+    "mime": "^4.1.0",
     "pino": "^10.1.0",
     "pino-pretty": "^11.2.2",
     "prom-client": "^15.1.3",

@@ -6,6 +6,7 @@ import { log } from '../utils/logger.js';
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { sendClientRequest } from './route-helpers.js';
+import { createAudioTTS } from '../utils/audioTTS.js';
 
 export const VERSION = '2.0.13';
 
@@ -62,6 +63,7 @@ export const apiRoutes = (app: express.Application, server: McpServer): void => 
     const chatArrayArgs = {
         ...baseArgs,
         message: z.string(),
+        audioTTS: z.boolean().optional().default(false),
     };
 
     server.registerTool(
@@ -108,7 +110,7 @@ export const apiRoutes = (app: express.Application, server: McpServer): void => 
         },
     );
 
-        server.registerTool(
+    server.registerTool(
         'chat-message',
         {
             title: 'Send Chat Message',
@@ -124,11 +126,13 @@ export const apiRoutes = (app: express.Application, server: McpServer): void => 
         },
         async (chatArrayArgs) => {
             const payload: Record<string, any> = {};
-            const { clientId, message } = chatArrayArgs;
+            const { clientId, message, audioTTS } = chatArrayArgs;
             if (typeof message === 'string') {
                 payload.message = message;
             }
-
+            if (typeof audioTTS === 'boolean' && audioTTS === true) {
+                payload.audioPath = await createAudioTTS(message);
+            }
             try {
                 const response = await sendClientRequest({
                     type: 'chat-message',
@@ -151,7 +155,7 @@ export const apiRoutes = (app: express.Application, server: McpServer): void => 
             };
         },
     );
-    
+
 
     // Setup WebSocket message handlers to route responses back to API requests
     function setupMessageHandlers() {
