@@ -8,6 +8,7 @@ import { wsRoutes } from "./routes/websocket.js";
 import { apiRoutes } from "./routes/api.js";
 import { log } from "./utils/logger.js";
 import { z } from 'zod';
+import path from "path";
 
 // Create an MCP server
 const server = new McpServer({
@@ -48,6 +49,12 @@ httpServer.headersTimeout = 0;
 const wss = new WebSocketServer({ server: httpServer, path: cfg.WS_PATH });
 wsRoutes(wss);
 apiRoutes(app, server);
+
+// 1) 오디오 파일 저장 폴더 경로
+const audioDir = path.join(process.cwd(), "tts_output");
+
+// 2) /tts 경로를 오디오 파일 공개 경로로 지정
+app.use("/tts", express.static(audioDir));
 
 /**
  * Initializes all server services in the correct order.

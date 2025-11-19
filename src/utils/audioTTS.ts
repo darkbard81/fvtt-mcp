@@ -71,7 +71,7 @@ export async function createAudioTTS(message: string): Promise<string> {
                 buffer = convertToWav(inlineData.data || '', inlineData.mimeType || '');
             }
             saveBinaryFile(`${fileName}.${fileExtension}`, buffer);
-            fileURL = `/tts/${fileName}.${fileExtension}`;
+            fileURL = `https://mcp.krdp.ddns.net/tts/${fileName}.${fileExtension}`;
             log.info(`Audio TTS file saved: ${fileURL}`);
         }
         else {
