@@ -5,13 +5,32 @@ import crypto from 'crypto';
 import { log } from '../utils/logger.js';
 import { URL } from 'node:url';
 
+let client: GoogleGenAI | null = null;
+export function getGenAI() {
+    if (!client) {
+        try {
+            client = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY ?? '' });
+        } catch (err: unknown) {
+            const meta = err instanceof Error
+                ? { message: err.message, stack: err.stack }
+                : { err };
+            log.error('Failed to initialize GoogleGenAI client', meta);
+            client = null;
+        }
+    }
+    return client;
+}
+
 function saveBinaryFile(fileName: string, content: Buffer) {
     writeFile(fileName, content, 'utf8', (err) => {
         if (err) {
-            console.error(`Error writing file ${fileName}:`, err);
+            log.error(`Error writing file ${fileName}`, {
+                message: err.message,
+                stack: err.stack,
+            });
             return;
         }
-        console.log(`File ${fileName} saved to file system.`);
+        log.info(`File ${fileName} saved to file system.`);
     });
 }
 
@@ -20,20 +39,16 @@ function normalizeUri(rawUrl: string, base = 'https://mcp.krdp.ddns.net') {
 }
 
 export async function createAudioTTS(message: string): Promise<string> {
-    const genAI = new GoogleGenAI({
-        apiKey: process.env.GOOGLE_GENAI_API_KEY || '',
-        vertexai: true,
-        // project: process.env.GOOGLE_GENAI_PROJECT_ID || '',
-        // location: process.env.GOOGLE_GENAI_PROJECT_LOCATION || '',
-    });
+    let fileURL = '';
+
+    const genAI = getGenAI();
+    if (!genAI) {
+        log.info('Google GenAI client is not initialized.');
+        return fileURL;
+    }
 
     const config = {
-        temperature: 1,
-        systemInstruction:
-        {
-            role: 'system',
-            parts: [{ text: 'Pronounce breathy sounds like "aah", "mmh", "eung" naturally and softly. and sexy.' }],
-        },
+        temperature: 2,
         responseModalities: [
             'audio',
         ],
@@ -62,32 +77,46 @@ export async function createAudioTTS(message: string): Promise<string> {
         config,
         contents,
     });
-    let fileIndex = 0;
 
     const filePath = crypto.randomUUID();
-    let fileURL: string = '';
+    const collectedBuffers: Buffer[] = [];
+    let collectedMimeType = '';
+
+    // 스트리밍 청크를 모두 모아서 한 번에 파일로 저장
     for await (const chunk of response) {
         if (!chunk.candidates || !chunk.candidates[0].content || !chunk.candidates[0].content.parts) {
             continue;
         }
         if (chunk.candidates?.[0]?.content?.parts?.[0]?.inlineData) {
-            const fileName = `${filePath}_${fileIndex++}`;
             const inlineData = chunk.candidates[0].content.parts[0].inlineData;
-            let fileExtension = mime.getExtension(inlineData.mimeType || '');
-            let buffer = Buffer.from(inlineData.data || '', 'base64');
-            if (!fileExtension) {
-                fileExtension = 'wav';
-                buffer = convertToWav(inlineData.data || '', inlineData.mimeType || '');
-            }
-            saveBinaryFile(`tts_output/${fileName}.${fileExtension}`, buffer);
-            fileURL = `tts/${fileName}.${fileExtension}`;
-            fileURL = normalizeUri(fileURL);
-            log.info(`Audio TTS file saved: ${fileURL}`);
+            collectedMimeType ||= inlineData.mimeType || '';
+            const buffer = Buffer.from(inlineData.data || '', 'base64');
+            collectedBuffers.push(buffer);
         }
         else {
-            log.info('failed to get audio data from TTS response chunk');
+            log.error('failed to get audio data from TTS response chunk');
         }
     }
+
+    if (!collectedBuffers.length) {
+        log.error('failed to collect audio data from TTS response');
+        return fileURL;
+    }
+
+    const combinedBuffer = Buffer.concat(collectedBuffers);
+    let fileExtension = mime.getExtension(collectedMimeType || '');
+    let fileData = combinedBuffer;
+
+    if (!fileExtension) {
+        fileExtension = 'wav';
+        fileData = convertToWav(combinedBuffer.toString('base64'), collectedMimeType || '');
+    }
+
+    const fileName = `${filePath}.${fileExtension}`;
+    saveBinaryFile(`tts_output/${fileName}`, fileData);
+    fileURL = normalizeUri(`tts/${fileName}`);
+    log.info(`Audio TTS file saved: ${fileURL}`);
+
     return fileURL;
 }
 
@@ -99,8 +128,8 @@ interface WavConversionOptions {
 
 function convertToWav(rawData: string, mimeType: string) {
     const options = parseMimeType(mimeType)
-    const wavHeader = createWavHeader(rawData.length, options);
     const buffer = Buffer.from(rawData, 'base64');
+    const wavHeader = createWavHeader(buffer.length, options);
 
     return Buffer.concat([wavHeader, buffer]);
 }

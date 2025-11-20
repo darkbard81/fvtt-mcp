@@ -4,6 +4,7 @@ node_modules/
 coverage/
 tmp/
 temp/
+tts_output/
 
 # TypeScript artifacts
 *.tsbuildinfo

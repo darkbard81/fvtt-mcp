@@ -5,6 +5,7 @@ import { pendingRequests, PENDING_REQUEST_TYPES, PendingRequestType, safeRespons
 import { log } from '../utils/logger.js';
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { ToolCallback } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { sendClientRequest } from './route-helpers.js';
 import { createAudioTTS } from '../utils/audioTTS.js';
 
@@ -63,6 +64,9 @@ export const apiRoutes = (app: express.Application, server: McpServer): void => 
     const chatArrayArgs = {
         ...baseArgs,
         message: z.string(),
+        //Todo : voiceActor, styleTone 추가
+        //voiceActor: z.string().optional().default('Achernar'),
+        //styleTone: z.string().optional().default('narration'),
         audioTTS: z.boolean().optional().default(false),
     };
 
@@ -109,6 +113,50 @@ export const apiRoutes = (app: express.Application, server: McpServer): void => 
             };
         },
     );
+
+    server.registerTool(
+        'chat-logs',
+        {
+            title: 'Get Chat Log History',
+            description: 'Fetch the recent chat log entries for a Foundry client',
+            inputSchema: addArrayArgs,
+            outputSchema: FIX_outputArgs,
+            annotations: {
+                title: 'Safe logMessage',
+                readOnlyHint: true,
+                destructiveHint: false, // 기본값은 true라서 함께 명시해 줘도 좋습니다
+                idempotentHint: true    // 같은 입력 반복 호출해도 영향 없음을 표시
+            }
+        },
+        async (addArrayArgs) => {
+            const payload: Record<string, any> = {};
+            const { clientId, limit } = addArrayArgs;
+            if (typeof limit === 'number') {
+                payload.limit = limit;
+            }
+
+            try {
+                const response = await sendClientRequest({
+                    type: 'chat-logs',
+                    clientId,
+                    payload,
+                });
+
+                const output = {
+                    clientId: response.clientId,
+                    requestId: response.requestId,
+                    data: response.data
+                }
+
+                return {
+                    content: [{ type: 'text', text: 'Success' }],
+                    structuredContent: output
+                };
+            } catch (err) {
+                return formatToolError(err, clientId);
+            };
+        },
+    )
 
     server.registerTool(
         'chat-message',
