@@ -34,7 +34,7 @@ function saveBinaryFile(fileName: string, content: Buffer) {
     });
 }
 
-function normalizeUri(rawUrl: string, base = 'https://mcp.krdp.ddns.net') {
+function normalizeUri(rawUrl: string, base = process.env.BASE_URL ?? 'http://localhost:3000/') {
     return new URL(rawUrl, base).toString(); // base는 상대경로일 때만 필요
 }
 

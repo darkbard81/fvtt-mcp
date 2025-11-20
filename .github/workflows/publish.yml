@@ -25,7 +25,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: yarn
+        run: npm ci
 
       - name: Extract tag version number
         id: get_version
@@ -51,12 +51,12 @@ jobs:
           echo -e "${FORMATTED_NOTES}" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      - name: Run Vite build
+      - name: Build server
         env:
           MODULE_VERSION: ${{steps.get_version.outputs.version-without-v}}
           GH_PROJECT: ${{github.repository}}
           GH_TAG: ${{github.ref_name}}
-        run: yarn build
+        run: npm run build
 
       - name: Install Podman
         run: |
@@ -68,8 +68,13 @@ jobs:
           IMAGE: ghcr.io/${{ github.repository }}:${{ steps.get_version.outputs.version }}
         run: |
           cat > Containerfile <<'EOF'
-          FROM docker.io/library/nginx:alpine
-          COPY dist /usr/share/nginx/html
+          FROM docker.io/library/node:20-alpine
+          WORKDIR /app
+          ENV NODE_ENV=production
+          COPY package.json package-lock.json ./
+          RUN npm ci --omit=dev
+          COPY dist ./dist
+          CMD ["node", "dist/server.js"]
           EOF
           podman build -t "$IMAGE" .
 
