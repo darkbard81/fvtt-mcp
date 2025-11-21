@@ -2,12 +2,13 @@
 import { WebSocket } from "ws";
 import { log } from "../utils/logger.js";
 import { Client } from "../core/Client.js";
+import { cfg } from "../config.js";
 
 type MessageHandler = (client: Client, message: any) => void;
 
-const INSTANCE_ID = process.env.FLY_ALLOC_ID || 'local';
+const INSTANCE_ID = cfg.INSTANCE_ID;
 const CLIENT_EXPIRY = 60 * 60 * 2; // 2 hours expiry for Redis keys
-const isMemoryStore = process.env.DB_TYPE === 'memory';
+const isMemoryStore = cfg.DB_TYPE === 'memory';
 
 export class ClientManager {
   private static clients = new Map<string, Client>();

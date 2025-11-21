@@ -1,10 +1,11 @@
 import pino from "pino";
 import { Counter, collectDefaultMetrics, Registry } from "prom-client";
 import { LogLevel } from "../types/types.js";
+import { cfg } from "../config.js";
 
 // Create Pino logger
 const logger = pino({
-  level: process.env.LOG_LEVEL || LogLevel.INFO,
+  level: cfg.LOG_LEVEL,
   transport: {
     target: 'pino-pretty',
     options: {

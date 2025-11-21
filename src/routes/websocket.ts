@@ -5,10 +5,8 @@ import { ClientManager } from "../core/ClientManager.js";
 // import { validateHeadlessSession } from "../workers/headlessSessions";
 import { cfg } from '../config.js';
 
-// Read ping interval from environment variable, default to 20 seconds
-const WEBSOCKET_PING_INTERVAL_MS = parseInt(process.env.WEBSOCKET_PING_INTERVAL_MS || '20000', 10);
-// Read client cleanup interval from environment variable, default to 15 seconds
-const CLIENT_CLEANUP_INTERVAL_MS = parseInt(process.env.CLIENT_CLEANUP_INTERVAL_MS || '15000', 10);
+const WEBSOCKET_PING_INTERVAL_MS = cfg.WEBSOCKET_PING_INTERVAL_MS;
+const CLIENT_CLEANUP_INTERVAL_MS = cfg.CLIENT_CLEANUP_INTERVAL_MS;
 
 export const wsRoutes = (wss: WebSocketServer): void => {
   wss.on("connection", async (ws, req) => {

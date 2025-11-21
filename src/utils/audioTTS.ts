@@ -4,12 +4,20 @@ import { writeFile } from 'fs';
 import crypto from 'crypto';
 import { log } from '../utils/logger.js';
 import { URL } from 'node:url';
+import { cfg } from '../config.js';
 
 let client: GoogleGenAI | null = null;
+/**
+ * Returns a singleton GoogleGenAI client or null when the API key is missing.
+ * Always checks the configured key before attempting initialization.
+ */
 export function getGenAI() {
+    if (!cfg.GOOGLE_GENAI_API_KEY) {
+        return null;
+    }
     if (!client) {
         try {
-            client = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY ?? '' });
+            client = new GoogleGenAI({ apiKey: cfg.GOOGLE_GENAI_API_KEY });
         } catch (err: unknown) {
             const meta = err instanceof Error
                 ? { message: err.message, stack: err.stack }
@@ -21,6 +29,11 @@ export function getGenAI() {
     return client;
 }
 
+/**
+ * Persists binary content to disk and logs success or failure.
+ * @param fileName Relative path to save the file under `tts_output`.
+ * @param content Audio payload to write.
+ */
 function saveBinaryFile(fileName: string, content: Buffer) {
     writeFile(fileName, content, 'utf8', (err) => {
         if (err) {
@@ -34,10 +47,21 @@ function saveBinaryFile(fileName: string, content: Buffer) {
     });
 }
 
-function normalizeUri(rawUrl: string, base = process.env.BASE_URL ?? 'http://localhost:3000/') {
+/**
+ * Normalizes a relative URL into an absolute URL using the configured base.
+ * @param rawUrl Relative or absolute URL part.
+ * @param base Base URL to resolve against, defaults to cfg.BASE_URL.
+ */
+function normalizeUri(rawUrl: string, base = cfg.BASE_URL ) {
     return new URL(rawUrl, base).toString(); // base는 상대경로일 때만 필요
 }
 
+/**
+ * Generates TTS audio for the given message and returns a public URL to the saved file.
+ * Uses streaming responses to assemble the final audio buffer before writing to disk.
+ * @param message Text content to synthesize.
+ * @returns Absolute URL string for the generated audio, or empty string on failure.
+ */
 export async function createAudioTTS(message: string): Promise<string> {
     let fileURL = '';
 
@@ -126,6 +150,12 @@ interface WavConversionOptions {
     bitsPerSample: number
 }
 
+/**
+ * Converts raw audio (base64 PCM) into a WAV buffer using parsed mime metadata.
+ * @param rawData Base64-encoded audio payload.
+ * @param mimeType Mime type string containing format details (e.g., channels/rate).
+ * @returns Buffer containing a complete WAV file.
+ */
 function convertToWav(rawData: string, mimeType: string) {
     const options = parseMimeType(mimeType)
     const buffer = Buffer.from(rawData, 'base64');
@@ -134,6 +164,11 @@ function convertToWav(rawData: string, mimeType: string) {
     return Buffer.concat([wavHeader, buffer]);
 }
 
+/**
+ * Extracts WAV header options from a mime type string.
+ * @param mimeType Mime type from the TTS response (e.g., audio/L16;rate=24000).
+ * @returns Parsed channel, sample rate, and bit depth info.
+ */
 function parseMimeType(mimeType: string) {
     const [fileType, ...params] = mimeType.split(';').map(s => s.trim());
     const [_, format] = fileType.split('/');
@@ -159,6 +194,12 @@ function parseMimeType(mimeType: string) {
     return options as WavConversionOptions;
 }
 
+/**
+ * Builds a PCM WAV header matching the provided audio buffer.
+ * @param dataLength Length of the raw PCM data in bytes.
+ * @param options WAV format parameters such as channels, sample rate, and bit depth.
+ * @returns Buffer containing a 44-byte WAV header.
+ */
 function createWavHeader(dataLength: number, options: WavConversionOptions) {
     const {
         numChannels,
