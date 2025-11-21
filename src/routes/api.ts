@@ -5,7 +5,6 @@ import { pendingRequests, PENDING_REQUEST_TYPES, PendingRequestType, safeRespons
 import { log } from '../utils/logger.js';
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ToolCallback } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { sendClientRequest } from './route-helpers.js';
 import { createAudioTTS } from '../utils/audioTTS.js';
 
