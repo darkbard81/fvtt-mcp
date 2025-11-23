@@ -14,6 +14,7 @@ export function registerChatMsgTools(server: McpServer): void {
     const chatArrayArgs = {
         ...baseArgs,
         message: z.string(),
+        tokenId: z.string().optional(),
         audioTTS: z.boolean().optional().default(false),
         temperature: z.number().min(0).max(2).optional().default(1),
         styleTone: z.nativeEnum(StyleTone).optional().default(StyleTone.Narration),
@@ -130,9 +131,12 @@ export function registerChatMsgTools(server: McpServer): void {
         },
         async (chatArrayArgs) => {
             const payload: Record<string, any> = {};
-            const { clientId, message, audioTTS, temperature, styleTone, voiceActor } = chatArrayArgs;
+            const { clientId, message, tokenId, audioTTS, temperature, styleTone, voiceActor } = chatArrayArgs;
             if (typeof message === 'string') {
                 payload.message = message;
+            }
+            if (typeof tokenId === 'string') {
+                payload.tokenId = tokenId;
             }
             if (typeof audioTTS === 'boolean' && audioTTS === true) {
                 payload.audioPath = await createAudioTTS(message, temperature, styleTone, voiceActor);
