@@ -199,8 +199,9 @@ export async function createAudioTTS(message: string, temperature: number, style
     }
 
     const fileName = `${filePath}.${fileExtension}`;
-    saveBinaryFile(`tts_output/${fileName}`, fileData);
-    fileURL = normalizeUri(`tts/${fileName}`);
+    saveBinaryFile(`${cfg.AUDIO_OUTPUT_DIR}/${fileName}`, fileData);
+    // fileURL = normalizeUri(`tts/${fileName}`);
+    fileURL = normalizeUri(`${cfg.AUDIO_PATH}/${fileName}`); 
     log.info(`Audio TTS file saved: ${fileURL}`);
 
     return fileURL;

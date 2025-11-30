@@ -6,6 +6,7 @@ import { log } from '../utils/logger.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerSearchTools } from './api/search.js';
 import { registerChatMsgTools } from './api/chatMsg.js';
+import { registerJournalTools } from './api/journal.js';
 
 export const VERSION = '2.0.13';
 
@@ -19,6 +20,7 @@ export const apiRoutes = (app: express.Application, server: McpServer): void => 
 
     registerSearchTools(server);
     registerChatMsgTools(server);
+    registerJournalTools(server);
 
 
     // Setup WebSocket message handlers to route responses back to API requests

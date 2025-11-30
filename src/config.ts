@@ -5,6 +5,7 @@ const toInt = (v: string | undefined, d: number) =>
   v ? Number.parseInt(v, 10) : d;
 
 export const cfg = {
+  /** API KEY Obligatory for FoundryVTT Module link */
   API_KEY: process.env.MCP_SERVER_API_KEY,
   AUDIO_MODEL: process.env.AUDIO_MODEL ?? 'gemini-2.5-flash-preview-tts',
   AUDIO_OUTPUT_DIR: process.env.AUDIO_OUTPUT_DIR ?? 'tts_output',
@@ -14,6 +15,7 @@ export const cfg = {
   DB_TYPE: process.env.DB_TYPE ?? 'memory',
   GH_PROJECT: process.env.GH_PROJECT,
   GH_TAG: process.env.GH_TAG,
+  /** Google Optional - limited function */
   GOOGLE_GENAI_API_KEY: process.env.GOOGLE_GENAI_API_KEY,
   GOOGLE_GENAI_PROJECT_ID: process.env.GOOGLE_GENAI_PROJECT_ID ?? 'none',
   GOOGLE_GENAI_PROJECT_LOCATION: process.env.GOOGLE_GENAI_PROJECT_LOCATION ?? 'global',
