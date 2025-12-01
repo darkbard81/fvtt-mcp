@@ -139,13 +139,43 @@ export function registerJournalTools(server: McpServer): void {
         journalId: z.string(),
     };
 
+    const pageDataSchema = z.object({
+        name: z.string().describe('PageTitle'),
+        type: z.enum(['text','image','video']).default('text'), // text, image 등
+        title: z.object({
+            show: z.boolean().default(false),
+            level: z.number().int().default(1),
+        }).describe('Option for Title'),
+        image: z.object({
+            caption: z.string().optional(),
+        }).optional().describe('Option for Image'),
+        text: z.object({
+            content: z.string().optional().describe('HTML'),
+            markdown: z.string().optional().describe('Markdown'),
+            format: z.number().int().default(2).describe('1:HTML, 2:Markdown'), // CONST.JOURNAL_ENTRY_PAGE_FORMATS
+        }).optional(),
+        video: z.object({
+            controls: z.boolean().optional().default(true),
+            loop: z.boolean().optional().default(false),
+            autoplay: z.boolean().optional().default(true),
+            volume: z.number().optional().default(0.5),
+            timestamp: z.number().optional(),
+            width: z.number().optional(),
+            height: z.number().optional(),
+        }).optional().describe('Option for Video'),
+        src: z.string().optional().describe('Image URL'),
+        sort: z.number().default(100000).optional(),
+    }).passthrough();
+
+
     const pageArgs = {
         ...baseArgs,
         action: z.enum(['create', 'update', 'delete', 'read']),
         journalId: z.string(),
         pageId: z.string().optional(),
-        pageData: z.record(z.any()).optional(),
+        pageData: pageDataSchema.optional(),
     };
+
 
     server.registerTool(
         'journal-list',
