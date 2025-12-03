@@ -17,6 +17,10 @@ export const cfg = {
   FOUNDRY_DATA_PATH: process.env.FOUNDRY_DATA_PATH ?? '',
   GH_PROJECT: process.env.GH_PROJECT,
   GH_TAG: process.env.GH_TAG,
+  GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
+  GITHUB_REDIRECT_URI: process.env.GITHUB_REDIRECT_URI,
+  CHATGPT_REDIRECT_URI: process.env.CHATGPT_REDIRECT_URI,
   /** Google Optional - limited function */
   GOOGLE_GENAI_API_KEY: process.env.GOOGLE_GENAI_API_KEY,
   GOOGLE_GENAI_PROJECT_ID: process.env.GOOGLE_GENAI_PROJECT_ID ?? 'none',

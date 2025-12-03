@@ -61,28 +61,21 @@ export enum StyleTone {
     Whisper = 'whisper',
 }
 
-let client: GoogleGenAI | null = null;
 /**
  * Returns a singleton GoogleGenAI client or null when the API key is missing.
  * Always checks the configured key before attempting initialization.
  * @returns GoogleGenAI client instance, or null when unavailable.
  */
 export function getGenAI(): GoogleGenAI | null {
-    if (!cfg.GOOGLE_GENAI_API_KEY) {
+    try {
+        return new GoogleGenAI({ apiKey: cfg.GOOGLE_GENAI_API_KEY });
+    } catch (err: unknown) {
+        const meta = err instanceof Error
+            ? { message: err.message, stack: err.stack }
+            : { err };
+        log.error('Failed to initialize GoogleGenAI client', meta);
         return null;
     }
-    if (!client) {
-        try {
-            client = new GoogleGenAI({ apiKey: cfg.GOOGLE_GENAI_API_KEY });
-        } catch (err: unknown) {
-            const meta = err instanceof Error
-                ? { message: err.message, stack: err.stack }
-                : { err };
-            log.error('Failed to initialize GoogleGenAI client', meta);
-            return null;
-        }
-    }
-    return client;
 }
 
 /**
@@ -308,9 +301,10 @@ export async function createImageGen(message: string, temperature: number): Prom
     const config = {
         temperature: temperature,
         maxOutputTokens: 1290,
+        topP: 0.95,
         responseModalities: [
             'IMAGE',
-            'TEXT',
+            // 'TEXT',
         ],
         imageConfig: {
             aspectRatio: "3:4",

@@ -5,6 +5,7 @@ coverage/
 tmp/
 temp/
 tts_output/
+token-store.json
 
 # TypeScript artifacts
 *.tsbuildinfo

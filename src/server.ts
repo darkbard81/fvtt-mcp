@@ -8,6 +8,7 @@ import { apiRoutes } from "./routes/api.js";
 import { cfg } from './config.js';
 import { wsRoutes } from "./routes/websocket.js";
 import { log } from "./utils/logger.js";
+import { authenticateMCP, registerOAuthRoutes } from "./oAuth.js";
 
 // === 인스턴스 준비: MCP + 환경 필수값 확인 ===
 const server = new McpServer({
@@ -28,7 +29,10 @@ if (!cfg.GOOGLE_GENAI_API_KEY) {
 const app = express();
 app.use(express.json());
 
-app.post(cfg.MCP_PATH, async (req, res) => {
+registerOAuthRoutes(app);
+
+app.post(cfg.MCP_PATH, authenticateMCP, async (req, res) => {
+    log.debug(`[MCP] Incoming POST ${req.originalUrl} body=${JSON.stringify(req.body ?? {})}`);
     // 요청별 새로운 Transport로 request ID 충돌 방지
     const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
@@ -41,6 +45,12 @@ app.post(cfg.MCP_PATH, async (req, res) => {
 
     await server.connect(transport);
     await transport.handleRequest(req, res, req.body);
+});
+
+// GET 핸드셰이크(SSE)도 동일하게 처리
+app.get(cfg.MCP_PATH, authenticateMCP, async (req, res) => {
+    log.debug(`[MCP] Incoming GET ${req.originalUrl} query=${JSON.stringify(req.query ?? {})}`);
+    return res.status(200);
 });
 
 // === HTTP 서버 인스턴스 ===
@@ -58,10 +68,20 @@ apiRoutes(app, server);
 // === 정적 파일: TTS 오디오 ===
 const audioDir = path.join(process.cwd(), cfg.FOUNDRY_DATA_PATH, cfg.AUDIO_OUTPUT_DIR);
 
+// app.use(
+//     (req, res, next) => {
+//         res.header("Access-Control-Allow-Origin", "https://chatgpt.com");
+//         res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+//         res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+//         res.header("Access-Control-Allow-Credentials", "true");
+//         next();
+//     }
+// );
+
 app.use(
     cfg.AUDIO_PATH,
     (req, res, next) => {
-        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Origin", "https://fvtt.krdp.ddns.net");
         res.header("Access-Control-Allow-Methods", "GET, OPTIONS");
         res.header("Access-Control-Allow-Headers", "Content-Type");
         next();
@@ -75,7 +95,7 @@ const imageDir = path.join(process.cwd(), cfg.FOUNDRY_DATA_PATH, cfg.IMAGE_OUTPU
 app.use(
     cfg.IMAGE_PATH,
     (req, res, next) => {
-        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Origin", "https://fvtt.krdp.ddns.net");
         res.header("Access-Control-Allow-Methods", "GET, OPTIONS");
         res.header("Access-Control-Allow-Headers", "Content-Type");
         next();

@@ -3,7 +3,7 @@
   "version": "1.0.5",
   "type": "module",
   "scripts": {
-    "dev": "node --watch --import ./loader-register.mjs src/server.ts",
+    "dev": "LOG_LEVEL=debug node --watch --import ./loader-register.mjs src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   },
