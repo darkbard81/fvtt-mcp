@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { createAudioTTS } from '../../utils/audioTTS.js';
-import { VoiceActor, StyleTone } from '../../utils/audioTTS.js';
+import { createAudioTTS } from '../../utils/assetGenerator.js';
+import { VoiceActor, StyleTone } from '../../types/types.js';
 import { baseArgs, FIX_outputArgs, formatToolError } from './common.js';
 import { sendClientRequest } from '../route-helpers.js';
 import { z } from 'zod';
@@ -19,7 +19,10 @@ export function registerChatMsgTools(server: McpServer): void {
         temperature: z.number().min(0).max(2).optional().default(1),
         styleTone: z.nativeEnum(StyleTone).optional().default(StyleTone.Normal),
         voiceActor: z.nativeEnum(VoiceActor).optional().default(VoiceActor.Achernar),
+
     };
+
+
 
     const bubbleArrayArgs = {
         ...baseArgs,

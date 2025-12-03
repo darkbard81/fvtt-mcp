@@ -68,20 +68,10 @@ apiRoutes(app, server);
 // === 정적 파일: TTS 오디오 ===
 const audioDir = path.join(process.cwd(), cfg.FOUNDRY_DATA_PATH, cfg.AUDIO_OUTPUT_DIR);
 
-// app.use(
-//     (req, res, next) => {
-//         res.header("Access-Control-Allow-Origin", "https://chatgpt.com");
-//         res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-//         res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-//         res.header("Access-Control-Allow-Credentials", "true");
-//         next();
-//     }
-// );
-
 app.use(
     cfg.AUDIO_PATH,
     (req, res, next) => {
-        res.header("Access-Control-Allow-Origin", "https://fvtt.krdp.ddns.net");
+        res.header("Access-Control-Allow-Origin", cfg.CORS_URL);
         res.header("Access-Control-Allow-Methods", "GET, OPTIONS");
         res.header("Access-Control-Allow-Headers", "Content-Type");
         next();
@@ -95,7 +85,7 @@ const imageDir = path.join(process.cwd(), cfg.FOUNDRY_DATA_PATH, cfg.IMAGE_OUTPU
 app.use(
     cfg.IMAGE_PATH,
     (req, res, next) => {
-        res.header("Access-Control-Allow-Origin", "https://fvtt.krdp.ddns.net");
+        res.header("Access-Control-Allow-Origin", cfg.CORS_URL);
         res.header("Access-Control-Allow-Methods", "GET, OPTIONS");
         res.header("Access-Control-Allow-Headers", "Content-Type");
         next();
@@ -126,7 +116,7 @@ async function initializeServices() {
         });
 
     } catch (error) {
-        log.error(`Error starting server: ${error}`);
+        log.error(`Error starting server: ${error}`); 
         process.exit(1);
     }
 }

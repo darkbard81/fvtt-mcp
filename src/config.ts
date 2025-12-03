@@ -12,7 +12,7 @@ export const cfg = {
   AUDIO_PATH: process.env.AUDIO_PATH ?? '/tts',
   BASE_URL: process.env.BASE_URL ?? 'http://localshost:3010',
   CLIENT_CLEANUP_INTERVAL_MS: toInt(process.env.CLIENT_CLEANUP_INTERVAL_MS, 15_000),
-  CORS_URL: process.env.CORS_URL ?? '*',
+  CORS_URL: process.env.CORS_URL ?? `*`,
   DB_TYPE: process.env.DB_TYPE ?? 'memory',
   FOUNDRY_DATA_PATH: process.env.FOUNDRY_DATA_PATH ?? '',
   GH_PROJECT: process.env.GH_PROJECT,

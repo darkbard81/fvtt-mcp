@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { baseArgs, FIX_outputArgs, formatToolError } from './common.js';
 import { sendClientRequest } from '../route-helpers.js';
-import { createImageGen } from '../../utils/audioTTS.js';
+import { createImageGen } from '../../utils/assetGenerator.js';
 import { z } from 'zod';
 
 // Bridge와 동일한 저널 데이터 형태 정의 (Foundry 의존 없이 직렬화된 데이터 기준)
@@ -175,11 +175,7 @@ export function registerJournalTools(server: McpServer): void {
         journalId: z.string(),
         pageId: z.string().optional(),
         pageData: pageDataSchema.optional(),
-        imageprompt: z.string().optional().default(`(masterpiece, best quality:1.4), (high resolution),
-anime style, 1girl, female rogue, thief, assassin, solo, full body, dynamic action pose, JRPG,
-(anime face, beautiful detailed eyes:1.2), (oversize chest:2.3) (outfit emphasizing agility:1.3), light clothing, thin fabric, sleeveless, midriff, thigh highs,
-(elaborate flashy accessories:1.3), gold ornaments, gemstones, layered jewelry, sash, intricate leather belts, holding daggers,
-white background`)
+        imageprompt: z.string().optional()
     };
 
 
