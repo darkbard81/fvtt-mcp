@@ -31,6 +31,19 @@ jobs:
         id: get_version
         uses: battila7/get-version-action@v2
 
+      - name: Decide release type
+        id: release_type
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "$TAG" =~ ^v[0-9]+\.0\.0$ ]]; then
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "release_label=Release" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "release_label=Prerelease" >> "$GITHUB_OUTPUT"
+          fi
+        shell: bash
+
       # Generate release notes with commit links
       - name: Generate Release Notes
         id: generate_notes
@@ -99,9 +112,9 @@ jobs:
         uses: ncipollo/release-action@v1.16.0
         with:
           allowUpdates: false
-          name: Release ${{ steps.get_version.outputs.version }}
+          name: ${{ steps.release_type.outputs.release_label }} ${{ steps.get_version.outputs.version }}
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.release_type.outputs.prerelease == 'true' }}
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
           body: ${{ env.RELEASE_NOTES }}
